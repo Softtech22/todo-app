@@ -30,6 +30,7 @@ try:
     print("✅ MongoDB connected successfully!")
 except Exception as e:
     print(f"❌ MongoDB connection error: {e}")
+    todos_collection = None
 
 # ===== Pydantic Models =====
 class TodoCreate(BaseModel):
@@ -58,11 +59,13 @@ def todo_helper(todo) -> dict:
         "createdAt": todo.get("createdAt"),
     }
 
-# ===== API Routes (MUST come BEFORE static files) =====
+# ===== API Routes =====
 
 # GET all todos
 @app.get("/api/todos")
 async def get_todos():
+    if todos_collection is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
     try:
         todos = []
         cursor = todos_collection.find().sort("createdAt", -1)
@@ -75,6 +78,8 @@ async def get_todos():
 # POST new todo
 @app.post("/api/todos")
 async def create_todo(todo: TodoCreate):
+    if todos_collection is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
     try:
         count = await todos_collection.count_documents({})
         if count >= 10:
@@ -99,6 +104,8 @@ async def create_todo(todo: TodoCreate):
 # DELETE todo
 @app.delete("/api/todos/{todo_id}")
 async def delete_todo(todo_id: str):
+    if todos_collection is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
     try:
         result = await todos_collection.delete_one({"_id": ObjectId(todo_id)})
         if result.deleted_count == 0:
@@ -110,6 +117,8 @@ async def delete_todo(todo_id: str):
 # PUT update todo
 @app.put("/api/todos/{todo_id}")
 async def update_todo(todo_id: str, update_data: TodoUpdate):
+    if todos_collection is None:
+        raise HTTPException(status_code=500, detail="Database not connected")
     try:
         todo = await todos_collection.find_one({"_id": ObjectId(todo_id)})
         if not todo:
@@ -140,6 +149,5 @@ async def update_todo(todo_id: str, update_data: TodoUpdate):
 async def test():
     return {"status": "API is working!", "message": "FastAPI + MongoDB"}
 
-# ===== SERVE STATIC FILES (MUST come LAST) =====
-# This will serve your public folder files
+# ===== SERVE STATIC FILES =====
 app.mount("/", StaticFiles(directory="public", html=True), name="public")
