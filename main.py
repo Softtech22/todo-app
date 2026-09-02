@@ -19,17 +19,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===== MongoDB =====
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:YOUR_PASSWORDsoft123@cluster1.ybelvwk.mongodb.net/todo_app")
+# ===== MongoDB Connection =====
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:soft123@cluster1.ybelvwk.mongodb.net/todo_app")
+
+# Initialize collection as None
+todos_collection = None
 
 try:
     client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
     db = client.todo_app
     todos_collection = db.todos
-    print("✅ MongoDB connected!")
+    print("✅ MongoDB connected successfully!")
 except Exception as e:
-    print(f"❌ MongoDB error: {e}")
-    todos_collection = None
+    print(f"❌ MongoDB connection error: {e}")
 
 # ===== Models =====
 class TodoCreate(BaseModel):
@@ -71,10 +73,13 @@ async def health():
     }
 
 # ===== API Routes =====
+
+# GET all todos
 @app.get("/api/todos")
 async def get_todos():
     if todos_collection is None:
-        raise HTTPException(status_code=500, detail="Database not connected")
+        return []  # Return empty array if MongoDB not connected
+    
     try:
         todos = []
         cursor = todos_collection.find().sort("createdAt", -1)
@@ -82,12 +87,15 @@ async def get_todos():
             todos.append(todo_helper(todo))
         return todos
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"❌ Error in get_todos: {e}")
+        return []  # Return empty array on error
 
+# POST new todo
 @app.post("/api/todos")
 async def create_todo(todo: TodoCreate):
     if todos_collection is None:
         raise HTTPException(status_code=500, detail="Database not connected")
+    
     try:
         count = await todos_collection.count_documents({})
         if count >= 10:
@@ -107,24 +115,30 @@ async def create_todo(todo: TodoCreate):
         created_todo = await todos_collection.find_one({"_id": result.inserted_id})
         return todo_helper(created_todo)
     except Exception as e:
+        print(f"❌ Error in create_todo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# DELETE todo
 @app.delete("/api/todos/{todo_id}")
 async def delete_todo(todo_id: str):
     if todos_collection is None:
         raise HTTPException(status_code=500, detail="Database not connected")
+    
     try:
         result = await todos_collection.delete_one({"_id": ObjectId(todo_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Todo not found")
         return {"message": "Deleted successfully"}
     except Exception as e:
+        print(f"❌ Error in delete_todo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# PUT update todo
 @app.put("/api/todos/{todo_id}")
 async def update_todo(todo_id: str, update_data: TodoUpdate):
     if todos_collection is None:
         raise HTTPException(status_code=500, detail="Database not connected")
+    
     try:
         todo = await todos_collection.find_one({"_id": ObjectId(todo_id)})
         if not todo:
@@ -148,7 +162,13 @@ async def update_todo(todo_id: str, update_data: TodoUpdate):
         updated_todo = await todos_collection.find_one({"_id": ObjectId(todo_id)})
         return todo_helper(updated_todo)
     except Exception as e:
+        print(f"❌ Error in update_todo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ===== Static Files (LAST) =====
+# ===== Test Routes =====
+@app.get("/api/test")
+async def test():
+    return {"status": "API is working!", "message": "FastAPI + MongoDB"}
+
+# ===== Serve Static Files (LAST) =====
 app.mount("/", StaticFiles(directory="public", html=True), name="public")
