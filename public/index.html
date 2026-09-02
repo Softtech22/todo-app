@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>📋 To-Do List</h1>
+            <button id="themeBtn">🌙 Dark Mode</button>
+        </div>
+
+        <!-- NAVIGATION BAR -->
+        <nav class="navbar">
+            <button class="nav-btn active" data-tab="active" id="activeTab">
+                <i class="fas fa-tasks"></i> Active Tasks
+                <span class="badge" id="activeBadge">0</span>
+            </button>
+            <button class="nav-btn" data-tab="history" id="historyTab">
+                <i class="fas fa-history"></i> History
+                <span class="badge" id="historyBadge">0</span>
+            </button>
+        </nav>
+
+        <!-- SEARCH BAR -->
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="🔍 Search tasks or categories...">
+            <select id="filterSelect">
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+
+        <!-- STEP-BY-STEP INPUT WIZARD -->
+        <div class="wizard-container">
+            <div class="step-indicators">
+                <span class="step-dot active" data-step="1">1</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="2">2</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="3">3</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="4">4</span>
+            </div>
+
+            <div class="wizard-step" id="step1">
+                <div class="step-icon">📁</div>
+                <div class="step-label">Enter Category</div>
+                <input type="text" id="categoryInput" placeholder="e.g., Work, Personal, Shopping...">
+                <div class="step-hint">Press Enter to continue →</div>
+            </div>
+
+            <div class="wizard-step" id="step2" style="display:none;">
+                <div class="step-icon">📝</div>
+                <div class="step-label">Enter Task</div>
+                <input type="text" id="todoInput" placeholder="What do you need to do?">
+                <div class="step-hint">Press Enter to continue →</div>
+            </div>
+
+            <div class="wizard-step" id="step3" style="display:none;">
+                <div class="step-icon">📅</div>
+                <div class="step-label">Set Due Date</div>
+                <input type="date" id="dueDateInput" min="">
+                <div class="step-hint">Press Enter to continue →</div>
+            </div>
+
+            <div class="wizard-step" id="step4" style="display:none;">
+                <div class="step-icon">⏰</div>
+                <div class="step-label">Set Time</div>
+                <input type="time" id="timeInput">
+                <div class="step-hint">Press Enter to add task ✅</div>
+            </div>
+        </div>
+
+        <!-- TASK LIMIT -->
+        <div class="task-limit">
+            <span id="taskCount">0</span> / 10 tasks used
+        </div>
+
+        <!-- TASK LIST -->
+        <ul id="todoList"></ul>
+
+        <!-- REMINDER SECTION -->
+        <div class="reminder-section">
+            <label>
+                <input type="checkbox" id="reminderToggle">
+                🔔 Set Reminder for this task
+            </label>
+            <input type="datetime-local" id="reminderDateTime" style="display:none;">
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <button id="backupBtn">💾 Backup</button>
+            <button id="restoreBtn">📂 Restore</button>
+            <button id="clearBtn">🗑️ Clear All</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
