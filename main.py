@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # ===== MongoDB Connection =====
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:soft123@cluster1.ybelvwk.mongodb.net/todo_app")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:YOUR_PASSWORD@cluster1.ybelvwk.mongodb.net/todo_app")
 
 try:
     client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
@@ -59,7 +59,12 @@ def todo_helper(todo) -> dict:
         "createdAt": todo.get("createdAt"),
     }
 
-# ===== API Routes =====
+# ===== ROOT ROUTE =====
+@app.get("/")
+async def root():
+    return {"message": "To-Do API is running!", "status": "ok"}
+
+# ===== API ROUTES =====
 
 # GET all todos
 @app.get("/api/todos")
@@ -144,10 +149,10 @@ async def update_todo(todo_id: str, update_data: TodoUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ===== Test API Route =====
+# ===== TEST API ROUTE =====
 @app.get("/api/test")
 async def test():
-    return {"status": "API is working!", "message": "FastAPI + MongoDB"}
+    return {"status": "API is working!", "message": "FastAPI + MongoDB", "db_connected": todos_collection is not None}
 
-# ===== SERVE STATIC FILES =====
+# ===== SERVE STATIC FILES (LAST) =====
 app.mount("/", StaticFiles(directory="public", html=True), name="public")
