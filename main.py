@@ -8,10 +8,9 @@ import os
 from datetime import datetime
 from bson import ObjectId
 
-# ===== Create FastAPI App =====
 app = FastAPI()
 
-# ===== CORS Middleware =====
+# ===== CORS =====
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,19 +19,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===== MongoDB Connection =====
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:YOUR_PASSWORD@cluster1.ybelvwk.mongodb.net/todo_app")
+# ===== MongoDB =====
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:YOUR_PASSWORDsoft123@cluster1.ybelvwk.mongodb.net/todo_app")
 
 try:
     client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
     db = client.todo_app
     todos_collection = db.todos
-    print("✅ MongoDB connected successfully!")
+    print("✅ MongoDB connected!")
 except Exception as e:
-    print(f"❌ MongoDB connection error: {e}")
+    print(f"❌ MongoDB error: {e}")
     todos_collection = None
 
-# ===== Pydantic Models =====
+# ===== Models =====
 class TodoCreate(BaseModel):
     task: str
     category: str
@@ -46,7 +45,6 @@ class TodoUpdate(BaseModel):
     toggleComplete: Optional[bool] = None
     restore: Optional[bool] = None
 
-# ===== Helper Functions =====
 def todo_helper(todo) -> dict:
     return {
         "id": str(todo["_id"]),
@@ -59,14 +57,20 @@ def todo_helper(todo) -> dict:
         "createdAt": todo.get("createdAt"),
     }
 
-# ===== ROOT ROUTE =====
+# ===== Health Check =====
 @app.get("/")
 async def root():
     return {"message": "To-Do API is running!", "status": "ok"}
 
-# ===== API ROUTES =====
+@app.get("/api/health")
+async def health():
+    return {
+        "status": "ok",
+        "mongodb": todos_collection is not None,
+        "env": os.environ.get("VERCEL_ENV", "development")
+    }
 
-# GET all todos
+# ===== API Routes =====
 @app.get("/api/todos")
 async def get_todos():
     if todos_collection is None:
@@ -80,7 +84,6 @@ async def get_todos():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# POST new todo
 @app.post("/api/todos")
 async def create_todo(todo: TodoCreate):
     if todos_collection is None:
@@ -93,10 +96,10 @@ async def create_todo(todo: TodoCreate):
         new_todo = {
             "task": todo.task,
             "category": todo.category,
-            "completed": todo.completed,
-            "dueDate": todo.dueDate,
-            "time": todo.time,
-            "reminder": todo.reminder,
+            "completed": todo.completed or False,
+            "dueDate": todo.dueDate or "",
+            "time": todo.time or "",
+            "reminder": todo.reminder or "",
             "createdAt": datetime.now()
         }
         
@@ -106,7 +109,6 @@ async def create_todo(todo: TodoCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# DELETE todo
 @app.delete("/api/todos/{todo_id}")
 async def delete_todo(todo_id: str):
     if todos_collection is None:
@@ -119,7 +121,6 @@ async def delete_todo(todo_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# PUT update todo
 @app.put("/api/todos/{todo_id}")
 async def update_todo(todo_id: str, update_data: TodoUpdate):
     if todos_collection is None:
@@ -149,10 +150,5 @@ async def update_todo(todo_id: str, update_data: TodoUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ===== TEST API ROUTE =====
-@app.get("/api/test")
-async def test():
-    return {"status": "API is working!", "message": "FastAPI + MongoDB", "db_connected": todos_collection is not None}
-
-# ===== SERVE STATIC FILES (LAST) =====
+# ===== Static Files (LAST) =====
 app.mount("/", StaticFiles(directory="public", html=True), name="public")
