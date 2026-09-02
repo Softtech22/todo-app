@@ -14,7 +14,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ===== Create FastAPI App =====
+# ===== Create FastAPI App (THIS MUST BE NAMED 'app') =====
 app = FastAPI()
 
 # ===== CORS Middleware =====
@@ -28,7 +28,7 @@ app.add_middleware(
 
 # ===== MongoDB Connection =====
 # ⚠️ IMPORTANT: Use environment variable for password!
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:soft123@cluster1.ybelvwk.mongodb.net/todo_app")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://softtech:YOUR_PASSWORD@cluster1.ybelvwk.mongodb.net/todo_app")
 
 todos_collection = None
 
@@ -192,13 +192,11 @@ async def test():
     }
 
 # ===== Serve Static Files (LAST - FALLBACK) =====
-# This serves any other static files (CSS, JS, etc.)
 app.mount("/static", StaticFiles(directory="public", html=True), name="static")
 
 # Catch-all for static files
 @app.get("/{path:path}")
 async def serve_static(path: str):
-    # If path starts with api, return 404 (should be handled by routes above)
     if path.startswith("api/"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
     
@@ -206,5 +204,4 @@ async def serve_static(path: str):
     if os.path.exists(file_path):
         return FileResponse(file_path)
     
-    # If file not found, serve index.html (for SPA routing)
     return FileResponse("public/index.html")
