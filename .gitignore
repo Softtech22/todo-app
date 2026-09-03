@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Virtual environment
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables (sensitive)
+.env
+
+# MongoDB local data
+/data/
+
+# Backup files
+*.bak
+*.backup
+
+# OS junk
+Thumbs.db
+.DS_Store
