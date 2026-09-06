@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: todo-fastapi
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://softtech:soft123@cluster1.ybelvwk.mongodb.net/todo_app
